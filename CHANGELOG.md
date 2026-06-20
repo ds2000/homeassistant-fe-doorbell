@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-20
+
+### Added
+- **Per-user Settings gear.** A gear at the bottom of the card opens a settings
+  panel where **any** household member (no admin rights needed) can choose their
+  language and add/edit/remove their own quick replies. Saved per-user via Home
+  Assistant's frontend user storage, so everyone keeps their own set. The
+  admin/YAML config still defines the shared defaults.
+- **Listen to the visitor.** Tap the camera to play the live stream with **audio
+  unmuted** (tap again to stop) — pairs with hold-to-talk for two-way intercom.
+  Audio is the camera's HLS stream, so it's a few seconds delayed and requires
+  the camera stream to carry audio (best on Safari/iOS for native HLS).
+
+### Changed
+- The custom-message box clears after sending.
+
 ## [0.2.4] - 2026-06-20
 
 ### Changed
@@ -93,7 +109,8 @@ single self-contained Lovelace card.
 - HACS plugin manifest, add-on repository manifest, MIT license, and a
   GitHub Actions release workflow.
 
-[Unreleased]: https://github.com/ds2000/homeassistant-fe-doorbell/compare/v0.2.4...HEAD
+[Unreleased]: https://github.com/ds2000/homeassistant-fe-doorbell/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/ds2000/homeassistant-fe-doorbell/compare/v0.2.4...v0.3.0
 [0.2.4]: https://github.com/ds2000/homeassistant-fe-doorbell/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/ds2000/homeassistant-fe-doorbell/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/ds2000/homeassistant-fe-doorbell/compare/v0.2.1...v0.2.2
