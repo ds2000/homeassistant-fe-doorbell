@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-06-20
+
+### Added
+- **Live-by-default.** The camera auto-shows the real-time WebRTC live view when a
+  visitor/person is detected, and the snapshot when nobody's there (kind to the
+  battery doorbell). Toggle with `auto_live`; presence entity via `person`.
+- **Speaker tap for sound.** A 🔊 control on the live view to start audio — iOS
+  blocks autoplay-with-sound, so one deliberate tap enables it (the WebRTC stream
+  itself carries a live audio track; verified end-to-end).
+- README screenshots from the real app, a Mermaid how-it-works diagram, and a
+  Buy-Me-A-Coffee link.
+
 ## [0.3.3] - 2026-06-20
 
 ### Fixed

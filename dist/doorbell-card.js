@@ -5,7 +5,7 @@
 (function () {
   const SERIF = "'Iowan Old Style','Palatino Linotype','Palatino','Georgia',serif";
   const SANS = "system-ui,-apple-system,'Segoe UI','Helvetica Neue',sans-serif";
-  const VERSION = "0.3.3";
+  const VERSION = "0.3.4";
   const esc = (s) => (s == null ? "" : String(s)).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
   const UD_KEY = "doorbell_card";
 
@@ -32,6 +32,7 @@
     visitor: "binary_sensor.reolink_video_doorbell_visitor",
     sleep: "binary_sensor.reolink_video_doorbell_sleep_status",
     snooze: "input_boolean.doorbell_snooze",
+    person: "binary_sensor.reolink_video_doorbell_person",
     language: "input_select.doorbell_language",
     message: "input_text.doorbell_custom_message",
     siren: "siren.reolink_video_doorbell_siren",
@@ -101,6 +102,8 @@
     _dbg(m) { const st = this._root && this._root.getElementById("talkstatus"); if (st) st.textContent = m; }
     async _toggleLive() {
       if (this._live) { this._stopLive(); this._dbg("Hold the talk button and speak — your voice plays at the door"); return; }
+      if (this._connecting) return;
+      this._connecting = true;
       this._setPill(true, "connecting…"); this._dbg("Listen: connecting…");
       try {
         // ha-camera-stream auto-selects WebRTC (real-time, no HLS stall) when
@@ -126,28 +129,47 @@
         } else { throw new Error("no HA player available"); }
         this._root.getElementById("camimg").style.display = "none";
         this._live = true; this._setPill(true);
-        this._dbg("Listening — live. Tap the camera again to stop.");
-        this._unmuteSoon();
+        this._dbg("Live. Tap 🔊 (bottom-right) for sound · tap the picture to stop.");
+        this._setSpk("live"); this._unmuteSoon();
       } catch (e) { this._setPill(false); this._dbg("Listen failed: " + ((e && e.message) || e)); }
+      finally { this._connecting = false; }
     }
-    // Reach into the nested HA player's <video> and force sound on.
+    // On platforms that allow it (desktop/Android), force sound on automatically.
     _unmuteSoon() {
       let n = 0;
       const tick = () => {
-        const cv = this._root && this._root.getElementById("camvid");
-        const v = cv && (cv.tagName.toLowerCase() === "video" ? cv : cv.shadowRoot && cv.shadowRoot.querySelector("video, ha-hls-player, ha-web-rtc-player"));
-        const vid = v && (v.tagName.toLowerCase() === "video" ? v : v.shadowRoot && v.shadowRoot.querySelector("video"));
-        if (vid) { vid.muted = false; vid.volume = 1; vid.play && vid.play().catch(() => {}); }
+        const v = this._deepVideo(this._root && this._root.getElementById("camvid"));
+        if (v && v.muted) { v.muted = false; v.volume = 1; v.play && v.play().catch(() => {}); }
         if (++n < 8 && this._live) setTimeout(tick, 400);
       };
       setTimeout(tick, 300);
+    }
+    _deepVideo(n) {
+      if (!n) return null;
+      if (n.tagName && n.tagName.toLowerCase() === "video") return n;
+      const s = n.shadowRoot, k = [...(n.children || []), ...(s ? s.children : [])];
+      for (const c of k) { const f = this._deepVideo(c); if (f) return f; }
+      return null;
+    }
+    // Speaker tap — a real user gesture, so iOS allows the audio to start.
+    _toggleSound() {
+      if (!this._live) { this._toggleLive(); return; }
+      const v = this._deepVideo(this._root.getElementById("camvid"));
+      if (!v) return;
+      v.muted = !v.muted; v.volume = 1;
+      if (!v.muted && v.play) v.play().catch(() => {});
+      this._setSpk(v.muted ? "live" : "on");
+    }
+    _setSpk(state) {
+      const spk = this._root && this._root.getElementById("spk");
+      if (spk) { spk.classList.toggle("live", state === "live"); spk.classList.toggle("on", state === "on"); }
     }
     _stopLive() {
       if (!this._root) return;
       const p = this._root.getElementById("camvid");
       if (p) { try { if (p.tagName.toLowerCase() === "video") { p.pause(); p.removeAttribute("src"); p.load(); } else { p.remove(); } } catch (e) {} }
       const img = this._root.getElementById("camimg"); if (img) img.style.display = "";
-      this._live = false; this._setPill(false);
+      this._live = false; this._setPill(false); this._setSpk(null);
     }
     _setPill(listening, msg) {
       const p = this._root && this._root.getElementById("pilltxt");
@@ -174,8 +196,11 @@
         .cam img{width:100%;height:100%;object-fit:cover;display:block}
         .cam .pill{position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:6px;background:rgba(20,18,15,.42);backdrop-filter:blur(4px);color:#fff;font-size:11px;font-weight:600;letter-spacing:.08em;padding:5px 10px;border-radius:9px}
         .cam .dot{width:7px;height:7px;border-radius:50%;background:#e06b6b}
-        .cam .spk{position:absolute;bottom:12px;right:12px;width:34px;height:34px;border-radius:50%;background:rgba(20,18,15,.42);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center}
+        .cam .spk{position:absolute;bottom:12px;right:12px;width:36px;height:36px;border-radius:50%;background:rgba(20,18,15,.42);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s}
         .cam .spk svg{width:18px;height:18px;fill:#fff}
+        .cam .spk.live{background:rgba(176,118,79,.92);animation:spkp 1.5s infinite}
+        .cam .spk.on{background:rgba(110,139,114,.92)}
+        @keyframes spkp{0%{box-shadow:0 0 0 0 rgba(176,118,79,.55)}70%{box-shadow:0 0 0 11px rgba(176,118,79,0)}100%{box-shadow:0 0 0 0 rgba(176,118,79,0)}}
         .status{display:flex;gap:18px;justify-content:center;padding:13px 0 4px;color:var(--sec);font-size:13px}
         .status .s{display:flex;align-items:center;gap:6px}
         .status svg{width:17px;height:17px;fill:var(--green)}
@@ -231,7 +256,7 @@
         <div class="sub">Tap the camera to listen · hold to talk back</div>
         <div class="cam" id="cam"><img id="camimg" alt=""/>
           <div class="pill"><span class="dot" id="pilldot"></span><span id="pilltxt">LIVE</span></div>
-          <div class="spk"><svg viewBox="0 0 24 24"><path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.84 14,18.7V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.76 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/></svg></div>
+          <div class="spk" id="spk"><svg viewBox="0 0 24 24"><path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.84 14,18.7V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.76 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/></svg></div>
         </div>
         <div class="status" id="status"></div>
         <div class="actions">
@@ -270,7 +295,8 @@
         <div style="text-align:center;color:var(--sec);opacity:.5;font-size:10px;padding-top:12px">doorbell-card v${VERSION}</div>
       </div>`;
 
-      r.getElementById("cam").addEventListener("click", () => this._toggleLive());
+      r.getElementById("cam").addEventListener("click", (e) => { if (e.target.closest && e.target.closest(".spk")) return; this._toggleLive(); });
+      r.getElementById("spk").addEventListener("click", (e) => { e.stopPropagation(); this._toggleSound(); });
       const qrBtn = r.getElementById("qrBtn"), qrPanel = r.getElementById("qrPanel");
       qrBtn.addEventListener("click", () => { qrBtn.classList.toggle("open"); qrPanel.classList.toggle("open"); });
       r.getElementById("siren").addEventListener("click", () => this._svc("siren", "toggle", { entity_id: this._cfg.siren }));
@@ -399,6 +425,14 @@
       if (vis) items.push(`<div class="s${vis.state === "on" ? " warn" : ""}">${ic("M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z")}<span>${vis.state === "on" ? "At door" : "Clear"}</span></div>`);
       if (slp) items.push(`<div class="s">${ic("M18.73,18C15.4,21.69 9.71,22 6,18.64C2.33,15.31 2.04,9.62 5.37,5.93C6.9,4.25 9,3.2 11.27,3C7.96,6.7 8.27,12.39 11.96,15.71C13.5,17.11 15.5,17.92 17.61,18C18,18 18.36,18 18.73,18Z")}<span>${slp.state === "on" ? "Asleep" : "Awake"}</span></div>`);
       r.getElementById("status").innerHTML = items.join("");
+
+      // Live-by-default: auto-show live when someone is at the door, snapshot
+      // otherwise (saves the battery doorbell from streaming when nobody's there).
+      if (this._cfg.auto_live !== false && !this._connecting) {
+        const present = ((this._state(c.visitor) || {}).state === "on") || ((this._state(c.person) || {}).state === "on");
+        if (present && !this._live) { this._autoLive = true; this._toggleLive(); }
+        else if (!present && this._live && this._autoLive) { this._autoLive = false; this._stopLive(); }
+      }
     }
   }
 
