@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.6] - 2026-06-20
+
+### Changed
+- **Live view is the default**, with the snapshot only as a fallback when the
+  stream is down (auto-recovers). Streaming is **gated to when the card is
+  actually on screen** (tab visible + card in view) or a visitor is present —
+  no perma-streaming, kind to battery doorbells.
+- **🔊 re-negotiates audio.** A muted WebRTC stream carries no audio track, so the
+  speaker tap re-opens the stream unmuted (within the user gesture iOS requires).
+- **Clear mute icon** — the speaker swaps between sound-on and a line-through
+  muted glyph instead of a subtle colour change.
+- Dropped the on-card instruction text (listen / unmute / hold-to-talk) — the UI
+  is self-explanatory.
+
+## [0.3.5] - 2026-06-20
+
+### Added
+- Live view auto-starts on load (later refined in 0.3.6 to be visibility-gated).
+
 ## [0.3.4] - 2026-06-20
 
 ### Added
