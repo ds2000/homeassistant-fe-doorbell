@@ -1,6 +1,6 @@
 {
   "name": "homeassistant-fe-doorbell",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Front-door intercom card + backend for Home Assistant — talk to Reolink doorbells behind an NVR via Neolink.",
   "author": "David Shaw (ds2000)",
   "license": "MIT",

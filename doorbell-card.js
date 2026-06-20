@@ -315,8 +315,14 @@
   class DoorbellCardEditor extends HTMLElement {
     setConfig(cfg) {
       this._cfg = Object.assign({}, cfg);
-      this._replies = JSON.parse(JSON.stringify(this._cfg.replies || REPLIES));
-      if (!this._built) this._build(); else { this._fill(); this._renderReplies(); }
+      // Build ONCE. Do NOT re-render on echoed config updates — rebuilding the
+      // reply inputs on every keystroke is what stole focus on mobile. After the
+      // initial build the editor is the source of truth; add/remove and language
+      // changes re-render explicitly.
+      if (!this._built) {
+        this._replies = JSON.parse(JSON.stringify(this._cfg.replies || REPLIES));
+        this._build();
+      }
     }
     set hass(h) { this._hass = h; }
 
