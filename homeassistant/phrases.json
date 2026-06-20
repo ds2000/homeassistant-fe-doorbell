@@ -1,0 +1,10 @@
+{
+  "_comment": "Quick-reply phrases per language. Run scripts/generate-phrases.sh to render these to /config/sounds/doorbell/<lang>/<key>.wav via Home Assistant Cloud TTS. Keys must match the script names in the HA package (brb, porch, help, moment, no_thanks).",
+  "languages": {
+    "en": { "locale": "en-GB", "brb": "I'll be right there.", "porch": "Leave it in the garden house please.", "help": "Hello, can I help you?", "moment": "One moment please.", "no_thanks": "No thank you, we're not interested." },
+    "nl": { "locale": "nl-NL", "brb": "Ik kom er zo aan.", "porch": "Zet het alstublieft in het tuinhuis.", "help": "Hallo, kan ik u helpen?", "moment": "Een moment alstublieft.", "no_thanks": "Nee bedankt, wij hebben geen interesse." },
+    "de": { "locale": "de-DE", "brb": "Ich komme sofort.", "porch": "Stellen Sie es bitte ins Gartenhaus.", "help": "Hallo, kann ich Ihnen helfen?", "moment": "Einen Moment bitte.", "no_thanks": "Nein danke, wir haben kein Interesse." },
+    "fr": { "locale": "fr-FR", "brb": "J'arrive tout de suite.", "porch": "Laissez-le dans l'abri de jardin, s'il vous plaît.", "help": "Bonjour, puis-je vous aider ?", "moment": "Un instant, s'il vous plaît.", "no_thanks": "Non merci, nous ne sommes pas intéressés." },
+    "es": { "locale": "es-ES", "brb": "Ahora mismo voy.", "porch": "Déjelo en la caseta del jardín, por favor.", "help": "Hola, ¿puedo ayudarle?", "moment": "Un momento, por favor.", "no_thanks": "No, gracias, no estamos interesados." }
+  }
+}

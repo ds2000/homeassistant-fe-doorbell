@@ -1,0 +1,18 @@
+# Neolink configuration for the doorbell talk add-on.
+# Copy to  <config>/addons/neolink.toml  and fill in your details.
+#
+# Point `address` at your Reolink NVR/hub IP and its media port (GetNetPort →
+# mediaPort, usually 9000). `channel_id` is the doorbell's channel on the NVR
+# (0-based; check the Reolink app or the NVR channel list). Credentials are your
+# Reolink account username/password (the same ones the HA `reolink` integration
+# uses). For a standalone doorbell (not behind an NVR), use the camera IP and
+# omit channel_id, or use `uid` for a battery camera.
+
+bind = "0.0.0.0"
+
+[[cameras]]
+name = "doorbell"
+username = "REOLINK_USERNAME"
+password = "REOLINK_PASSWORD"
+address = "192.168.1.100:9000"
+channel_id = 3

@@ -1,0 +1,16 @@
+# Secrets — never commit
+.env
+*.token
+.ha_token
+secrets.yaml
+
+# Generated audio
+homeassistant/sounds/**/*.wav
+homeassistant/sounds/**/*.mp3
+
+# OS / editor
+.DS_Store
+*.log
+node_modules/
+.idea/
+.vscode/

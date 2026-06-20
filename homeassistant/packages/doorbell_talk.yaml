@@ -1,0 +1,94 @@
+# Doorbell Talk — Home Assistant package
+# ---------------------------------------------------------------------------
+# Copy this file to  <config>/packages/doorbell_talk.yaml  and enable packages
+# in configuration.yaml:
+#
+#   homeassistant:
+#     packages: !include_dir_named packages
+#
+# Entity IDs below assume a Reolink Video Doorbell behind a Reolink NVR (the
+# `reolink` integration). Adjust names to match your install if different.
+# After copying, restart Home Assistant (shell_command + input_* require a
+# full restart, not just a reload).
+# ---------------------------------------------------------------------------
+
+input_select:
+  doorbell_language:
+    name: Doorbell language
+    options: [English, Dutch, German, French, Spanish]
+    initial: English
+    icon: mdi:translate
+
+input_text:
+  doorbell_custom_message:
+    name: Doorbell custom message
+    max: 250
+    icon: mdi:message-text
+
+input_boolean:
+  doorbell_snooze:
+    name: Doorbell snooze
+    icon: mdi:bell-sleep-outline
+
+shell_command:
+  # Quick reply: copy a pre-generated phrase WAV into the add-on talk queue.
+  doorbell_say_file: "cp /config/sounds/doorbell/{{ lang }}/{{ name }}.wav /config/addons/talk_queue/{{ name }}.wav"
+  # Custom message: generate speech via Home Assistant Cloud TTS (see tts_say.py).
+  doorbell_say_custom: "python3 /config/tts_say.py"
+  # Hold-to-talk recorder: move an uploaded recording into the talk queue.
+  doorbell_play_upload: "mv /media/doorbell/{{ fn }} /config/addons/talk_queue/{{ fn }}"
+
+# Quick-reply scripts. Each resolves the selected language to a folder code and
+# plays the matching phrase file. NOTE: HA shell_command templates only support
+# simple {{ var }} substitution — the language lookup is done here, not inline.
+script:
+  doorbell_say_brb:
+    alias: "Doorbell Say: Be right there"
+    mode: single
+    sequence:
+      - service: shell_command.doorbell_say_file
+        data:
+          name: brb
+          lang: "{{ {'English':'en','Dutch':'nl','German':'de','French':'fr','Spanish':'es'}[states('input_select.doorbell_language')] | default('en') }}"
+
+  doorbell_say_porch:
+    alias: "Doorbell Say: Leave it (garden house)"
+    mode: single
+    sequence:
+      - service: shell_command.doorbell_say_file
+        data:
+          name: porch
+          lang: "{{ {'English':'en','Dutch':'nl','German':'de','French':'fr','Spanish':'es'}[states('input_select.doorbell_language')] | default('en') }}"
+
+  doorbell_say_help:
+    alias: "Doorbell Say: Can I help you"
+    mode: single
+    sequence:
+      - service: shell_command.doorbell_say_file
+        data:
+          name: help
+          lang: "{{ {'English':'en','Dutch':'nl','German':'de','French':'fr','Spanish':'es'}[states('input_select.doorbell_language')] | default('en') }}"
+
+  doorbell_say_moment:
+    alias: "Doorbell Say: One moment"
+    mode: single
+    sequence:
+      - service: shell_command.doorbell_say_file
+        data:
+          name: moment
+          lang: "{{ {'English':'en','Dutch':'nl','German':'de','French':'fr','Spanish':'es'}[states('input_select.doorbell_language')] | default('en') }}"
+
+  doorbell_say_no_thanks:
+    alias: "Doorbell Say: No thanks"
+    mode: single
+    sequence:
+      - service: shell_command.doorbell_say_file
+        data:
+          name: no_thanks
+          lang: "{{ {'English':'en','Dutch':'nl','German':'de','French':'fr','Spanish':'es'}[states('input_select.doorbell_language')] | default('en') }}"
+
+  doorbell_say_custom:
+    alias: "Doorbell Say: Custom message"
+    mode: single
+    sequence:
+      - service: shell_command.doorbell_say_custom

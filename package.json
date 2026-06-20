@@ -1,0 +1,13 @@
+{
+  "name": "homeassistant-fe-doorbell",
+  "version": "0.1.0",
+  "description": "Front-door intercom card + backend for Home Assistant — talk to Reolink doorbells behind an NVR via Neolink.",
+  "author": "David Shaw (ds2000)",
+  "license": "MIT",
+  "homepage": "https://github.com/ds2000/homeassistant-fe-doorbell",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ds2000/homeassistant-fe-doorbell.git"
+  },
+  "keywords": ["home-assistant", "lovelace", "hacs", "reolink", "doorbell", "neolink", "intercom"]
+}

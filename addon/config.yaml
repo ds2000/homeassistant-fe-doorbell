@@ -1,0 +1,14 @@
+name: Neolink Doorbell Talk
+version: "0.1.0"
+slug: neolink_doorbell
+description: Two-way audio to a Reolink doorbell behind an NVR (Baichuan via Neolink)
+url: https://github.com/ds2000/homeassistant-fe-doorbell
+arch:
+  - aarch64
+  - amd64
+init: false
+# The add-on watches /config/addons/talk_queue and /media/doorbell for audio
+# files and plays them to the doorbell. It needs read/write to both.
+map:
+  - config:rw
+  - media:rw
