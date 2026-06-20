@@ -5,7 +5,7 @@
 (function () {
   const SERIF = "'Iowan Old Style','Palatino Linotype','Palatino','Georgia',serif";
   const SANS = "system-ui,-apple-system,'Segoe UI','Helvetica Neue',sans-serif";
-  const VERSION = "0.3.2";
+  const VERSION = "0.3.3";
   const esc = (s) => (s == null ? "" : String(s)).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
   const UD_KEY = "doorbell_card";
 
@@ -101,34 +101,46 @@
     _dbg(m) { const st = this._root && this._root.getElementById("talkstatus"); if (st) st.textContent = m; }
     async _toggleLive() {
       if (this._live) { this._stopLive(); this._dbg("Hold the talk button and speak — your voice plays at the door"); return; }
-      this._setPill(true, "connecting…"); this._dbg("Listen: requesting stream…");
+      this._setPill(true, "connecting…"); this._dbg("Listen: connecting…");
       try {
-        const r = await this._hass.connection.sendMessagePromise({ type: "camera/stream", entity_id: this._cfg.camera, format: "hls" });
-        let url = r && r.url; if (!url) throw new Error("no url returned");
-        if (!/^https?:/.test(url)) url = location.origin + url;
-        if (!customElements.get("ha-hls-player") && window.loadCardHelpers) {
+        // ha-camera-stream auto-selects WebRTC (real-time, no HLS stall) when
+        // available, else falls back to HLS. Ensure the element is loaded.
+        if (!customElements.get("ha-camera-stream") && window.loadCardHelpers) {
           try { const h = await window.loadCardHelpers(); const t = await h.createCardElement({ type: "picture-entity", entity: this._cfg.camera, camera_view: "live" }); t.hass = this._hass; } catch (e) {}
         }
-        const usingHls = !!customElements.get("ha-hls-player");
         const cam = this._root.getElementById("cam");
         let p = this._root.getElementById("camvid"); if (p) { try { p.remove(); } catch (e) {} }
-        if (usingHls) {
+        if (customElements.get("ha-camera-stream")) {
+          p = document.createElement("ha-camera-stream");
+          p.id = "camvid"; p.hass = this._hass; p.controls = false; p.muted = false; p.allowExoPlayer = false;
+          p.stateObj = this._state(this._cfg.camera);
+          p.style.cssText = "width:100%;height:100%;display:block;--video-max-height:230px";
+          cam.insertBefore(p, cam.firstChild);
+        } else if (customElements.get("ha-hls-player")) {
+          const r = await this._hass.connection.sendMessagePromise({ type: "camera/stream", entity_id: this._cfg.camera, format: "hls" });
+          let url = r && r.url; if (url && !/^https?:/.test(url)) url = location.origin + url;
           p = document.createElement("ha-hls-player");
           p.id = "camvid"; p.hass = this._hass; p.controls = false; p.muted = false; p.autoPlay = true; p.playsInline = true;
           p.style.cssText = "width:100%;height:100%;display:block";
           cam.insertBefore(p, cam.firstChild); p.url = url;
-        } else {
-          p = document.createElement("video");
-          p.id = "camvid"; p.autoplay = true; p.playsInline = true; p.setAttribute("playsinline", ""); p.setAttribute("webkit-playsinline", "");
-          p.style.cssText = "width:100%;height:100%;object-fit:cover;display:block";
-          cam.insertBefore(p, cam.firstChild);
-          p.muted = false; p.volume = 1; p.src = url;
-          p.play().catch(() => { p.muted = true; p.play().catch(() => {}); });
-        }
+        } else { throw new Error("no HA player available"); }
         this._root.getElementById("camimg").style.display = "none";
         this._live = true; this._setPill(true);
-        this._dbg("Listening — live (" + (usingHls ? "hls.js" : "native HLS") + "). Tap camera to stop.");
+        this._dbg("Listening — live. Tap the camera again to stop.");
+        this._unmuteSoon();
       } catch (e) { this._setPill(false); this._dbg("Listen failed: " + ((e && e.message) || e)); }
+    }
+    // Reach into the nested HA player's <video> and force sound on.
+    _unmuteSoon() {
+      let n = 0;
+      const tick = () => {
+        const cv = this._root && this._root.getElementById("camvid");
+        const v = cv && (cv.tagName.toLowerCase() === "video" ? cv : cv.shadowRoot && cv.shadowRoot.querySelector("video, ha-hls-player, ha-web-rtc-player"));
+        const vid = v && (v.tagName.toLowerCase() === "video" ? v : v.shadowRoot && v.shadowRoot.querySelector("video"));
+        if (vid) { vid.muted = false; vid.volume = 1; vid.play && vid.play().catch(() => {}); }
+        if (++n < 8 && this._live) setTimeout(tick, 400);
+      };
+      setTimeout(tick, 300);
     }
     _stopLive() {
       if (!this._root) return;

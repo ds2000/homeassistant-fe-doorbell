@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-06-20
+
+### Fixed
+- **Listen is now smooth and real-time.** It uses `ha-camera-stream`, which
+  selects **WebRTC** (go2rtc) when available instead of HLS. HLS was constantly
+  stalling on the live doorbell source (frozen frame, no progress); WebRTC plays
+  in real-time, low-latency, unmuted — verified the video clock advances 1:1 with
+  wall-clock. Falls back to HLS only if WebRTC isn't available.
+
 ## [0.3.1] - 2026-06-20
 
 ### Fixed
