@@ -5,6 +5,7 @@
 (function () {
   const SERIF = "'Iowan Old Style','Palatino Linotype','Palatino','Georgia',serif";
   const SANS = "system-ui,-apple-system,'Segoe UI','Helvetica Neue',sans-serif";
+  const VERSION = "0.3.2";
   const esc = (s) => (s == null ? "" : String(s)).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
   const UD_KEY = "doorbell_card";
 
@@ -97,20 +98,21 @@
     }
 
     // ── live listen (unmuted) ──────────────────────────────────────────────────
+    _dbg(m) { const st = this._root && this._root.getElementById("talkstatus"); if (st) st.textContent = m; }
     async _toggleLive() {
-      if (this._live) { this._stopLive(); return; }
-      this._setPill(true, "connecting…");
+      if (this._live) { this._stopLive(); this._dbg("Hold the talk button and speak — your voice plays at the door"); return; }
+      this._setPill(true, "connecting…"); this._dbg("Listen: requesting stream…");
       try {
         const r = await this._hass.connection.sendMessagePromise({ type: "camera/stream", entity_id: this._cfg.camera, format: "hls" });
-        let url = r && r.url; if (!url) throw new Error("no stream");
+        let url = r && r.url; if (!url) throw new Error("no url returned");
         if (!/^https?:/.test(url)) url = location.origin + url;
-        // Prefer HA's hls.js-based player — fluid on any browser, not just Safari.
         if (!customElements.get("ha-hls-player") && window.loadCardHelpers) {
           try { const h = await window.loadCardHelpers(); const t = await h.createCardElement({ type: "picture-entity", entity: this._cfg.camera, camera_view: "live" }); t.hass = this._hass; } catch (e) {}
         }
+        const usingHls = !!customElements.get("ha-hls-player");
         const cam = this._root.getElementById("cam");
         let p = this._root.getElementById("camvid"); if (p) { try { p.remove(); } catch (e) {} }
-        if (customElements.get("ha-hls-player")) {
+        if (usingHls) {
           p = document.createElement("ha-hls-player");
           p.id = "camvid"; p.hass = this._hass; p.controls = false; p.muted = false; p.autoPlay = true; p.playsInline = true;
           p.style.cssText = "width:100%;height:100%;display:block";
@@ -125,7 +127,8 @@
         }
         this._root.getElementById("camimg").style.display = "none";
         this._live = true; this._setPill(true);
-      } catch (e) { this._setPill(false, "stream unavailable"); }
+        this._dbg("Listening — live (" + (usingHls ? "hls.js" : "native HLS") + "). Tap camera to stop.");
+      } catch (e) { this._setPill(false); this._dbg("Listen failed: " + ((e && e.message) || e)); }
     }
     _stopLive() {
       if (!this._root) return;
@@ -252,6 +255,7 @@
           <button class="add" id="setAdd" type="button">+ Add reply</button>
           <div class="sethint">Saved just for you — other users keep their own.</div>
         </div></div>
+        <div style="text-align:center;color:var(--sec);opacity:.5;font-size:10px;padding-top:12px">doorbell-card v${VERSION}</div>
       </div>`;
 
       r.getElementById("cam").addEventListener("click", () => this._toggleLive());
