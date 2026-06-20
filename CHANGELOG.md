@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-06-20
+
+### Fixed
+- **Listen is now fluid.** It uses Home Assistant's hls.js-based player instead of
+  a raw `<video>` (native HLS only plays on Safari, so in the app webview the
+  live view never started and you saw the choppy still image). Falls back to
+  native HLS if HA's player isn't present. The doorbell's stream does carry audio
+  (AAC), so sound should now come through.
+
 ## [0.3.0] - 2026-06-20
 
 ### Added
@@ -109,7 +118,8 @@ single self-contained Lovelace card.
 - HACS plugin manifest, add-on repository manifest, MIT license, and a
   GitHub Actions release workflow.
 
-[Unreleased]: https://github.com/ds2000/homeassistant-fe-doorbell/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/ds2000/homeassistant-fe-doorbell/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/ds2000/homeassistant-fe-doorbell/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/ds2000/homeassistant-fe-doorbell/compare/v0.2.4...v0.3.0
 [0.2.4]: https://github.com/ds2000/homeassistant-fe-doorbell/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/ds2000/homeassistant-fe-doorbell/compare/v0.2.2...v0.2.3

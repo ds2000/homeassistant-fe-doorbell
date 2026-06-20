@@ -99,27 +99,38 @@
     // ── live listen (unmuted) ──────────────────────────────────────────────────
     async _toggleLive() {
       if (this._live) { this._stopLive(); return; }
+      this._setPill(true, "connecting…");
       try {
         const r = await this._hass.connection.sendMessagePromise({ type: "camera/stream", entity_id: this._cfg.camera, format: "hls" });
-        const cam = this._root.getElementById("cam");
-        let v = this._root.getElementById("camvid");
-        if (!v) {
-          v = document.createElement("video");
-          v.id = "camvid"; v.autoplay = true; v.controls = false; v.playsInline = true;
-          v.setAttribute("playsinline", ""); v.setAttribute("webkit-playsinline", "");
-          v.style.cssText = "width:100%;height:100%;object-fit:cover;display:block";
-          cam.insertBefore(v, cam.firstChild);
+        let url = r && r.url; if (!url) throw new Error("no stream");
+        if (!/^https?:/.test(url)) url = location.origin + url;
+        // Prefer HA's hls.js-based player — fluid on any browser, not just Safari.
+        if (!customElements.get("ha-hls-player") && window.loadCardHelpers) {
+          try { const h = await window.loadCardHelpers(); const t = await h.createCardElement({ type: "picture-entity", entity: this._cfg.camera, camera_view: "live" }); t.hass = this._hass; } catch (e) {}
         }
-        v.muted = false; v.volume = 1; v.src = r.url;
-        await v.play().catch(() => {});
+        const cam = this._root.getElementById("cam");
+        let p = this._root.getElementById("camvid"); if (p) { try { p.remove(); } catch (e) {} }
+        if (customElements.get("ha-hls-player")) {
+          p = document.createElement("ha-hls-player");
+          p.id = "camvid"; p.hass = this._hass; p.controls = false; p.muted = false; p.autoPlay = true; p.playsInline = true;
+          p.style.cssText = "width:100%;height:100%;display:block";
+          cam.insertBefore(p, cam.firstChild); p.url = url;
+        } else {
+          p = document.createElement("video");
+          p.id = "camvid"; p.autoplay = true; p.playsInline = true; p.setAttribute("playsinline", ""); p.setAttribute("webkit-playsinline", "");
+          p.style.cssText = "width:100%;height:100%;object-fit:cover;display:block";
+          cam.insertBefore(p, cam.firstChild);
+          p.muted = false; p.volume = 1; p.src = url;
+          p.play().catch(() => { p.muted = true; p.play().catch(() => {}); });
+        }
         this._root.getElementById("camimg").style.display = "none";
         this._live = true; this._setPill(true);
-      } catch (e) { this._setPill(false, "no audio"); }
+      } catch (e) { this._setPill(false, "stream unavailable"); }
     }
     _stopLive() {
       if (!this._root) return;
-      const v = this._root.getElementById("camvid");
-      if (v) { try { v.pause(); v.removeAttribute("src"); v.load(); } catch (e) {} }
+      const p = this._root.getElementById("camvid");
+      if (p) { try { if (p.tagName.toLowerCase() === "video") { p.pause(); p.removeAttribute("src"); p.load(); } else { p.remove(); } } catch (e) {} }
       const img = this._root.getElementById("camimg"); if (img) img.style.display = "";
       this._live = false; this._setPill(false);
     }
