@@ -71,6 +71,12 @@ Everything ships in this repo:
 
 Add the card to a dashboard (a **Panel / single-card view** is recommended). Every option is optional; the defaults below match a Reolink Video Doorbell behind an NVR with the package installed.
 
+Entity names, the default language, and the theme can also be set from the
+card's **visual editor** (no YAML needed) — the same way the fe-tesla card maps
+entities. The built-in quick replies are spoken via Home Assistant Cloud TTS, so
+generating phrase WAVs is **optional** (only needed for the pre-baked
+`script.doorbell_say_*` path).
+
 ```yaml
 type: custom:doorbell-card
 camera: camera.reolink_video_doorbell_fluent
@@ -81,32 +87,28 @@ snooze: input_boolean.doorbell_snooze
 language: input_select.doorbell_language
 message: input_text.doorbell_custom_message
 siren: siren.reolink_video_doorbell_siren
-theme: auto          # auto | light | dark
-# Optional. Omit to use the 6 built-in replies below.
+default_language: English   # optional — spoken language (or set it in the editor)
+theme: auto                 # auto | light | dark
+# Optional. Omit to use the built-in replies. A reply with `phrases` is spoken
+# via Cloud TTS in the selected language; a reply with `service` calls that
+# service instead.
 replies:
-  - name: Be right there
-    icon: "M12,2A10,10 0 0,0 2,12 ..."   # mdi SVG path data
-    service: script.doorbell_say_brb
+  - name: Be right there        # button label
+    phrases:                    # what is spoken, per language
+      en: "I'll be right there."
+      nl: "Ik kom er zo aan."
+      de: "Ich komme sofort."
+      fr: "J'arrive tout de suite."
+      es: "Ahora mismo voy."
   - name: Garden house
-    icon: "M12,3L2,12H5V20 ..."
-    service: script.doorbell_say_porch
-  - name: Can I help
-    icon: "M9,22A1,1 0 0,1 8,21 ..."
-    service: script.doorbell_say_help
-  - name: One moment
-    icon: "M6,2V8H6V8L10,12 ..."
-    service: script.doorbell_say_moment
-  - name: No thanks
-    icon: "M12,2C17.53,2 22,6.47 ..."
-    service: script.doorbell_say_no_thanks
-  - name: Siren
-    icon: "M12,2A7,7 0 0,1 19,9 ..."
-    service: siren.toggle
-    target: siren.reolink_video_doorbell_siren
-    accent: true
+    phrases:
+      en: "Please put the parcel in the garden house."
+  # …add as many as you like. icon: optional mdi SVG path (defaults to a chat bubble).
 ```
 
-**Reply options:** `name` (label), `icon` (mdi SVG **path** string), `service` (`domain.service` to call on tap), optional `target` (entity id passed as the call target), optional `accent: true` (highlights the button).
+**Reply options:** `name` (the **button label**) and optional `icon` (mdi SVG **path** string; defaults to a chat bubble), then **either** `phrases` (a map of language-code → **spoken text** — the easy way to customise what the door says) **or** `service` (`domain.service` to call on tap, with optional `target` entity id). The **siren** is its own dedicated button (set by the `siren:` entity), not a reply. You can edit each reply's label and spoken text — and add or remove replies — from the card's **visual editor**.
+
+**Languages** are defined by the `languages` option (defaults to English, Dutch, German, French, Spanish), each mapping a label to a phrase code and TTS locale; `default_language` picks the active one.
 
 | Option | Default | Notes |
 |---|---|---|

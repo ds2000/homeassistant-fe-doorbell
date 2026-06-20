@@ -14,3 +14,6 @@ homeassistant/sounds/**/*.mp3
 node_modules/
 .idea/
 .vscode/
+
+# CI workflow parked until gh has the workflow scope (see CONTRIBUTING)
+.github/workflows/
