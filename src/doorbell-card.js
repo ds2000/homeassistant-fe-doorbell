@@ -91,7 +91,7 @@
       const lang = this._activeLang();
       this._svc("input_select", "select_option", { entity_id: this._cfg.language, option: lang.value });
       this._svc("input_text", "set_value", { entity_id: this._cfg.message, value: text });
-      setTimeout(() => this._svc("script", "doorbell_say_custom"), 450);
+      setTimeout(() => this._svc("script", "doorbell_say_custom"), 250);
     }
 
     // Run a quick reply: a service-based reply calls its service; a phrase-based
@@ -298,8 +298,9 @@
       if (dl && li && li.state !== dl && (li.attributes.options || []).includes(dl)) {
         this._svc("input_select", "select_option", { entity_id: c.language, option: dl });
       }
-      const m = this._state(c.message), inp = r.getElementById("msg");
-      if (m && inp && document.activeElement !== inp && inp.value !== m.state && m.state) inp.value = m.state;
+      // NOTE: the custom-message box is a pure input — it is intentionally NOT
+      // synced from input_text state, so firing a quick reply (which writes the
+      // phrase to input_text) does not drop text into the message field.
     }
   }
 

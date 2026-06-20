@@ -1,12 +1,12 @@
 #!/bin/sh
 DIRS="/config/addons/talk_queue /media/doorbell"
 for d in $DIRS; do mkdir -p "$d" 2>/dev/null; done
-echo "talk-daemon v4: watching $DIRS"
+echo "talk-daemon v5: watching $DIRS"
 play_file() {
   f="$1"; echo "PLAY $f -> doorbell"
   pf="/tmp/padded.wav"; rm -f "$pf"
   if gst-launch-1.0 -q -e \
-       audiotestsrc wave=silence num-buffers=150 samplesperbuffer=320 ! audio/x-raw,format=S16LE,rate=16000,channels=1,layout=interleaved ! queue ! concat name=c ! wavenc ! filesink location="$pf" \
+       audiotestsrc wave=silence num-buffers=90 samplesperbuffer=320 ! audio/x-raw,format=S16LE,rate=16000,channels=1,layout=interleaved ! queue ! concat name=c ! wavenc ! filesink location="$pf" \
        uridecodebin uri="file://$f" ! audioconvert ! audioresample ! audio/x-raw,format=S16LE,rate=16000,channels=1,layout=interleaved ! queue ! c. 2>/tmp/gst.err; then
     play="$pf"
   else
@@ -22,5 +22,5 @@ while true; do
       play_file "$f"
     done
   done
-  sleep 1
+  sleep 0.2
 done

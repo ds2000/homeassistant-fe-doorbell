@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-06-20
+
+### Changed
+- **Quick replies fire directly** and no longer drop the phrase into the
+  custom-message box (the box is now a pure input, never synced from state).
+- **Faster playback** — the talk-daemon poll interval is `1s → 0.2s`, the silence
+  pre-roll trimmed (`~3s → ~1.8s`), and the card's pre-speak delay `450ms → 250ms`.
+
 ## [0.2.3] - 2026-06-20
 
 ### Fixed
@@ -85,7 +93,8 @@ single self-contained Lovelace card.
 - HACS plugin manifest, add-on repository manifest, MIT license, and a
   GitHub Actions release workflow.
 
-[Unreleased]: https://github.com/ds2000/homeassistant-fe-doorbell/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/ds2000/homeassistant-fe-doorbell/compare/v0.2.4...HEAD
+[0.2.4]: https://github.com/ds2000/homeassistant-fe-doorbell/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/ds2000/homeassistant-fe-doorbell/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/ds2000/homeassistant-fe-doorbell/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/ds2000/homeassistant-fe-doorbell/compare/v0.2.0...v0.2.1
