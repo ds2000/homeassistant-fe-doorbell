@@ -111,11 +111,14 @@
       const r = this.attachShadow({ mode: "open" });
       this._root = r;
       const c = this._cfg;
-      const replyHtml = c.replies.map((b, i) => `
+      const hasReplies = Array.isArray(c.replies) && c.replies.length;
+      const replyHtml = hasReplies
+        ? c.replies.map((b, i) => `
         <button class="reply" data-i="${i}">
           <svg viewBox="0 0 24 24"><path d="${b.icon || DEF_ICON}"/></svg>
           <span>${b.name}</span>
-        </button>`).join("");
+        </button>`).join("")
+        : `<div class="qempty">No quick replies yet — add them in the card settings (edit dashboard → this card).</div>`;
 
       r.innerHTML = `
       <style>
@@ -157,6 +160,7 @@
         .reply:active{transform:scale(.97);background:var(--green-soft)}
         .reply svg{width:26px;height:26px;fill:none;stroke:var(--green);stroke-width:1.4}
         .reply span{font-weight:500;font-size:15px;text-align:center}
+        .qempty{grid-column:1/-1;text-align:center;color:var(--sec);font-size:13px;padding:14px 10px;line-height:1.5}
         .lbl{text-transform:uppercase;letter-spacing:.17em;font-size:11px;font-weight:600;color:var(--sec);padding:22px 2px 11px}
         .msg{display:flex;gap:9px;align-items:stretch}
         .msg input{flex:1;background:var(--green-soft);border:1px solid var(--bd);border-radius:14px;padding:0 15px;color:var(--tx);font-size:15px;outline:none}
@@ -225,15 +229,23 @@
     _initTalk(btn, status) {
       let mr, chunks = [], mime;
       const pick = () => { for (const m of ["audio/mp4", "audio/webm;codecs=opus", "audio/webm", "audio/ogg"]) if (window.MediaRecorder && MediaRecorder.isTypeSupported(m)) return m; return ""; };
+      // getUserMedia only works in a secure context (HTTPS, or localhost).
+      const micOk = window.isSecureContext && navigator.mediaDevices && navigator.mediaDevices.getUserMedia;
+      if (!micOk) status.textContent = "Talk needs a secure connection — open Home Assistant over HTTPS (your Nabu Casa URL).";
       const start = async (e) => {
         e.preventDefault(); if (mr && mr.state === "recording") return;
+        if (!micOk) { status.textContent = "Talk needs HTTPS. Open HA via your Nabu Casa (remote) URL, then allow the microphone."; return; }
         try {
           const st = await navigator.mediaDevices.getUserMedia({ audio: true });
           mime = pick(); chunks = []; mr = new MediaRecorder(st, mime ? { mimeType: mime } : undefined);
           mr.ondataavailable = (ev) => { if (ev.data && ev.data.size) chunks.push(ev.data); };
           mr.onstop = () => { st.getTracks().forEach((t) => t.stop()); this._send(new Blob(chunks, { type: mime || "audio/webm" }), status); };
           mr.start(); btn.classList.add("rec"); status.textContent = "Listening… release to send";
-        } catch (err) { status.textContent = "Microphone blocked — open in Safari"; }
+        } catch (err) {
+          status.textContent = err && err.name === "NotAllowedError"
+            ? "Microphone permission denied — allow mic access for Home Assistant in your device settings."
+            : "Microphone unavailable: " + ((err && err.message) || err);
+        }
       };
       const stop = (e) => { if (e) e.preventDefault(); if (mr && mr.state !== "inactive") { mr.stop(); btn.classList.remove("rec"); status.textContent = "Sending…"; } };
       btn.addEventListener("pointerdown", start);
