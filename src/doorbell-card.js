@@ -73,16 +73,29 @@
     }
     _state(id) { return this._hass && this._hass.states[id]; }
 
-    // The currently-selected language object from config (by input_select value).
-    _lang() {
+    // The active language: card config `default_language` wins, else the
+    // input_select state, else the first configured language.
+    _activeLang() {
       const langs = this._cfg.languages || [];
+      const pref = this._cfg.default_language;
+      if (pref) { const l = langs.find((x) => x.value === pref); if (l) return l; }
       const cur = this._state(this._cfg.language);
-      return langs.find((l) => l.value === (cur && cur.state)) || langs[0] || { code: "en" };
+      return langs.find((l) => l.value === (cur && cur.state)) || langs[0] || { value: "English", code: "en" };
+    }
+
+    // Speak arbitrary text in the active language. Forces input_select to the
+    // active language FIRST so the TTS locale can't drift, then sets the message
+    // and triggers the Cloud-TTS script (tts_say.py reads both).
+    _speak(text) {
+      if (!text) return;
+      const lang = this._activeLang();
+      this._svc("input_select", "select_option", { entity_id: this._cfg.language, option: lang.value });
+      this._svc("input_text", "set_value", { entity_id: this._cfg.message, value: text });
+      setTimeout(() => this._svc("script", "doorbell_say_custom"), 450);
     }
 
     // Run a quick reply: a service-based reply calls its service; a phrase-based
-    // reply is spoken via Cloud TTS in the selected language (set the message,
-    // then trigger the custom-message script — same safe path as the text box).
+    // reply is spoken via Cloud TTS in the active language.
     _reply(b) {
       if (!b) return;
       if (b.service) {
@@ -90,11 +103,8 @@
         this._svc(d, s, b.target ? { entity_id: b.target } : {});
         return;
       }
-      const lang = this._lang();
-      const text = (b.phrases && (b.phrases[lang.code] || b.phrases.en)) || b.name || "";
-      if (!text) return;
-      this._svc("input_text", "set_value", { entity_id: this._cfg.message, value: text });
-      setTimeout(() => this._svc("script", "doorbell_say_custom"), 250);
+      const lang = this._activeLang();
+      this._speak((b.phrases && (b.phrases[lang.code] || b.phrases.en)) || b.name || "");
     }
 
     _render() {
@@ -206,8 +216,7 @@
       const msg = r.getElementById("msg");
       r.getElementById("send").addEventListener("click", () => {
         const v = msg.value.trim(); if (!v) return;
-        this._svc("input_text", "set_value", { entity_id: this._cfg.message, value: v });
-        setTimeout(() => this._svc("script", "doorbell_say_custom"), 250);
+        this._speak(v);
       });
       this._initTalk(r.getElementById("talk"), r.getElementById("talkstatus"));
       this._refreshCam();

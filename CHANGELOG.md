@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-06-20
+
+### Fixed
+- **Custom messages and quick replies now force the active language right before
+  speaking**, instead of relying on a load-time sync. This stops the spoken
+  language drifting (e.g. a message coming out in French when English was
+  selected). The card sets `input_select` to the active language (config
+  `default_language`, else the current selection) before each Cloud-TTS call.
+
 ## [0.2.0] - 2026-06-20
 
 ### Added
@@ -60,6 +69,7 @@ single self-contained Lovelace card.
 - HACS plugin manifest, add-on repository manifest, MIT license, and a
   GitHub Actions release workflow.
 
-[Unreleased]: https://github.com/ds2000/homeassistant-fe-doorbell/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/ds2000/homeassistant-fe-doorbell/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/ds2000/homeassistant-fe-doorbell/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/ds2000/homeassistant-fe-doorbell/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/ds2000/homeassistant-fe-doorbell/releases/tag/v0.1.0
