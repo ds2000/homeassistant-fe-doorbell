@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.7] - 2026-06-30
+
+### Added
+- Vendored two previously host-only helper files into the repo: `doorbell-fonts.js`
+  (Fraunces / Hanken Grotesk webfont loader) and `doorbell-record-card.js`
+  (recording-state Lovelace card). No functional change to the main card.
+
 ## [0.3.6] - 2026-06-20
 
 ### Changed
